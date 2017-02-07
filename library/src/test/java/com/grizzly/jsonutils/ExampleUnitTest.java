@@ -1,5 +1,7 @@
 package com.grizzly.jsonutils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -13,5 +15,18 @@ public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
         assertEquals(4, 2 + 2);
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("@value", null);
+            jsonObject.put("@name", false);
+            jsonObject.put("@names", "null");
+
+            assertTrue(!jsonObject.optBoolean("@value", false));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
     }
 }

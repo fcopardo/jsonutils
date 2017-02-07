@@ -10,8 +10,13 @@ import java.util.ArrayList;
 /**
  * Created by fco on 06-02-17.
  */
-public class jsonUtils {
+public class JsonUtils {
 
+    public static String logTag = "";
+
+    public static void setLogTag(String logTag){
+        JsonUtils.logTag = logTag;
+    }
     /**
      * Get JSONObject from JSONObject by the given key, will return null if unsuccessful.
      */
@@ -93,13 +98,15 @@ public class jsonUtils {
     public static <T> T parseFromJsonObject(JSONObject object, String keyToParse, Class<T> returnType, String debugTag, boolean shouldLogInfo) {
 
         Object obj = parseFromJsonObject(object, keyToParse, debugTag, shouldLogInfo);
-        if (obj != null) {
+        if (obj != null && !object.isNull(keyToParse)) {
+            //Log.e("JsonUtils-"+keyToParse, "Object "+returnType.getSimpleName()+" was not null! was "+obj+" = "+obj.toString());
             if (returnType.isAssignableFrom(obj.getClass())) {
                 return (T) obj;
             } else {
                 logInfo(debugTag, shouldLogInfo, "JSONObject '" + keyToParse + "' is not of type " + returnType.getSimpleName() + "! It is of type " + obj.getClass().getSimpleName() + "!");
             }
         }
+        //Log.e("JsonUtils-"+keyToParse, "Object "+returnType.getSimpleName()+" was null");
 
         return null;
     }
@@ -111,11 +118,12 @@ public class jsonUtils {
     @SuppressWarnings("unchecked")
     public static Object parseFromJsonObject(JSONObject object, String keyToParse, String debugTag, boolean shouldLogInfo) {
 
-        if (object != null && object.has(keyToParse)) {
+        if (object != null && object.has(keyToParse) && !object.isNull(keyToParse)) {
 
             try {
-
                 Object obj = object.get(keyToParse);
+                if(obj == null || obj.equals(JSONObject.NULL) || object.getString(keyToParse).trim().equalsIgnoreCase("null")) return null;
+                //Log.e("JsonUtils-"+object, "Parsed OBJECT: "+keyToParse+" from object:"+object+" es equal to "+obj);
                 return obj;
 
             } catch (JSONException e) {
@@ -124,8 +132,10 @@ public class jsonUtils {
 
         } else if (object == null) {
             logInfo(debugTag, shouldLogInfo, "The passed JSONObject is null so can't be parsed.");
+            //Log.e("JsonUtils", "The passed JSONObject is null so can't be parsed.");
         } else if (!object.has(keyToParse)) {
             logInfo(debugTag, shouldLogInfo, "The passed JSONObject doesn't contain key '" + keyToParse + "'.");
+            //Log.e("JsonUtils-"+object, "The passed JSONObject doesn't contain key " + keyToParse);
         }
 
         return null;
@@ -288,9 +298,15 @@ public class jsonUtils {
      */
     public static boolean parseBoolean(JSONObject object, String keyToParse, boolean defaultBoolean, String debugTag, boolean shouldLogInfo) {
 
-        Boolean boolData = parseFromJsonObject(object, keyToParse, Boolean.class, debugTag, shouldLogInfo);
+        //Boolean boolData = parseFromJsonObject(object, keyToParse, Boolean.class, debugTag, shouldLogInfo);
+        Boolean boolData = null;
+        try {
+            boolData = object.getBoolean(keyToParse);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         if (boolData == null) {
-            boolData = defaultBoolean;
+           return defaultBoolean;
         }
 
         return boolData;
@@ -301,12 +317,7 @@ public class jsonUtils {
      */
     public static boolean parseBoolean(JSONObject object, String keyToParse, boolean defaultBoolean) {
 
-        Boolean boolData = parseFromJsonObject(object, keyToParse, Boolean.class, "", false);
-        if (boolData == null) {
-            boolData = defaultBoolean;
-        }
-
-        return boolData;
+        return parseBoolean(object, keyToParse, defaultBoolean, "", false);
     }
 
     /**
